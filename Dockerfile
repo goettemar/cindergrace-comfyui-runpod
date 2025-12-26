@@ -1,7 +1,7 @@
 # CINDERGRACE ComfyUI RunPod Template
 # Based on ai-dock/comfyui - optimized for cloud deployment
 # Adds CINDERGRACE-specific custom nodes
-FROM ghcr.io/ai-dock/comfyui:v2-cuda-12.1.1-base-22.04-v0.3.20
+FROM ghcr.io/ai-dock/comfyui:v2-cuda-12.1.1-base-22.04-v0.2.7
 
 # Environment
 ENV PYTHONUNBUFFERED=1
