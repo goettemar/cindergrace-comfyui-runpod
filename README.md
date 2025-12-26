@@ -29,16 +29,13 @@ Optimiertes ComfyUI Docker Image für CINDERGRACE Video-Generierung auf RunPod.
 
 ### 2. Modelle herunterladen
 
-Starte einen günstigen CPU Pod mit der Network Volume und führe aus:
+Nutze das **CINDERGRACE Model Manager** Template (CPU Pod) um Modelle zu downloaden:
 
-```bash
-# Download Script holen
-wget https://raw.githubusercontent.com/goettemar/cindergrace-comfyui-runpod/main/download_models.sh
-chmod +x download_models.sh
-./download_models.sh
-```
+1. Model Manager Template deployen (siehe unten)
+2. Web UI öffnen
+3. Quick Links Tab → URLs kopieren und downloaden
 
-Oder manuell:
+Oder manuell per SSH:
 
 ```bash
 mkdir -p /workspace/models/{clip,vae,diffusion_models,unet,loras,audio_encoders}
@@ -68,6 +65,42 @@ aria2c -x 16 -d /workspace/models/diffusion_models -o wan2.2_i2v_low_noise_14B_f
 2. CINDERGRACE → Settings → ComfyUI URL eintragen
 3. Test Connection → Grün = Ready!
 
+## RunPod Template Einstellungen
+
+| Feld | Wert |
+|------|------|
+| **Template Name** | CINDERGRACE ComfyUI |
+| **Container Image** | `ghcr.io/goettemar/cindergrace-comfyui-runpod:latest` |
+| **Container Disk** | 30 GB |
+| **Volume Mount Path** | `/workspace` |
+| **HTTP Port** | `8188` |
+
+### Template README (für RunPod):
+```
+CINDERGRACE ComfyUI - Video Generation Backend
+
+Optimized for AI video generation with CINDERGRACE Pipeline GUI.
+
+INCLUDED:
+• CUDA 12.8 + PyTorch 2.9.1 (RTX 50xx/40xx/A100 ready)
+• ComfyUI with Manager
+• Wan 2.2, Flux, LTX-Video, Florence-2, GGUF support
+
+SETUP:
+1. Attach Network Volume with models at /workspace
+2. Deploy GPU pod (RTX 4090/5090 recommended)
+3. Copy proxy URL: https://<POD_ID>-8188.proxy.runpod.net
+4. Paste into CINDERGRACE → Settings → ComfyUI URL
+
+MODELS:
+Use "CINDERGRACE Model Manager" template to download models.
+
+LINKS:
+• GitHub: https://github.com/goettemar/cindergrace-comfyui-runpod
+• Discord: Coming soon
+• Docs: https://github.com/goettemar/cindergrace_gui
+```
+
 ## Network Volume Struktur
 
 ```
@@ -83,13 +116,10 @@ aria2c -x 16 -d /workspace/models/diffusion_models -o wan2.2_i2v_low_noise_14B_f
 │   ├── diffusion_models/
 │   │   ├── wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors  (14.3 GB)
 │   │   ├── wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors   (14.3 GB)
-│   │   └── wan2.2_s2v_14B_fp8_scaled.safetensors             (16.4 GB)
+│   │   └── flux1-krea-dev.safetensors                        (~24 GB)
 │   ├── unet/
-│   │   └── flux1-dev-fp8-e4m3fn.safetensors         (11.9 GB)
 │   ├── loras/
-│   │   └── wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors (1.2 GB)
 │   └── audio_encoders/
-│       └── wav2vec2_large_english_fp16.safetensors  (631 MB)
 ├── input/                       # Upload Bilder
 └── output/                      # Generierte Videos (persistent)
 ```
@@ -99,7 +129,7 @@ aria2c -x 16 -d /workspace/models/diffusion_models -o wan2.2_i2v_low_noise_14B_f
 | Set | Modelle | Größe | Use Case |
 |-----|---------|-------|----------|
 | Minimal | Wan I2V | ~36 GB | Video aus Bildern |
-| Standard | + Flux | ~58 GB | + Keyframe Generation |
+| Standard | + Flux | ~60 GB | + Keyframe Generation |
 | Full | + S2V | ~76 GB | + Speech to Video |
 
 ## GPU Empfehlungen
@@ -108,43 +138,8 @@ aria2c -x 16 -d /workspace/models/diffusion_models -o wan2.2_i2v_low_noise_14B_f
 |-----|------|---------|------------|
 | RTX 5090 | 32 GB | ~$0.80 | Beste Wahl für FP8 |
 | RTX 4090 | 24 GB | ~$0.40 | Budget-Option |
-| 2x RTX 4090 | 48 GB | ~$1.00 | Für größere Batches |
 | A100 40GB | 40 GB | ~$1.50 | Datacenter |
 | A100 80GB | 80 GB | ~$2.00 | FP16 Modelle |
-
-## Docker Image bauen
-
-### Option 1: GitHub Actions (empfohlen)
-
-Das Image wird automatisch gebaut bei:
-- **Push auf main:** Automatisch mit Tag `latest`
-- **Manuell:** Actions → "Build Docker Image" → "Run workflow"
-- **Release Tag:** Push mit Tag `v1.0.0`
-
-```bash
-# Release erstellen
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-### Option 2: Lokal bauen
-
-```bash
-docker build -t ghcr.io/goettemar/cindergrace-comfyui-runpod:latest .
-docker push ghcr.io/goettemar/cindergrace-comfyui-runpod:latest
-```
-
-## Template auf RunPod erstellen
-
-1. My Templates → New Template
-2. Einstellungen:
-   - Name: `CINDERGRACE ComfyUI`
-   - Container Image: `ghcr.io/goettemar/cindergrace-comfyui-runpod:latest`
-   - Container Disk: 30 GB
-   - Volume Mount Path: `/workspace`
-   - HTTP Ports: `8188`
-3. Optional: Public Template aktivieren
-4. Save Template
 
 ## Troubleshooting
 
@@ -152,7 +147,7 @@ docker push ghcr.io/goettemar/cindergrace-comfyui-runpod:latest
 - Warte 1-2 Minuten bis ComfyUI gestartet ist
 - Prüfe Pod Logs auf Fehler
 
-### "Forbidden" Error
+### "Forbidden" (403) Error
 - CINDERGRACE Version aktualisieren (User-Agent Header Fix)
 
 ### "Model not found"
@@ -164,24 +159,16 @@ docker push ghcr.io/goettemar/cindergrace-comfyui-runpod:latest
 - Resolution reduzieren
 - Größere GPU wählen
 
-## Dateien
-
-| Datei | Beschreibung |
-|-------|--------------|
-| `Dockerfile` | Docker Image Definition |
-| `start.sh` | Container Startup Script |
-| `link_models.sh` | Model Symlink Script |
-| `download_models.sh` | Model Download Helper |
-| `template.json` | RunPod Template Config |
-
 ## Links
 
-- [CINDERGRACE GUI](https://github.com/goettemar/cindergrace-pipeline-gui)
+- [CINDERGRACE GUI](https://github.com/goettemar/cindergrace_gui)
+- [CINDERGRACE Model Manager](https://github.com/goettemar/cindergrace-model-manager)
 - [Docker Image (GHCR)](https://ghcr.io/goettemar/cindergrace-comfyui-runpod)
 - [RunPod Docs](https://docs.runpod.io)
 - [ComfyUI GitHub](https://github.com/comfyanonymous/ComfyUI)
 - [Wan 2.2 Models](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged)
+- Discord: Coming soon
 
 ---
 
-*CUDA 12.8 | Python 3.11 | PyTorch 2.x | ComfyUI Latest*
+*CUDA 12.8 | Python 3.11 | PyTorch 2.9.1 | ComfyUI Latest*
