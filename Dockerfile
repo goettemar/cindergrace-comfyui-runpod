@@ -1,7 +1,7 @@
 # CINDERGRACE ComfyUI RunPod Template
 # Optimized for Wan 2.2 FP8, Flux, and video generation workflows
-# CUDA 12.4 for broad GPU support (RTX 30xx/40xx/50xx, A100, H100)
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+# CUDA 12.8 + PyTorch 2.9.1 for RTX 50xx (Blackwell) support
+FROM nvidia/cuda:12.8.0-cudnn-runtime-ubuntu22.04
 
 # Build args
 ARG DEBIAN_FRONTEND=noninteractive
@@ -36,8 +36,8 @@ RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
 # Upgrade pip
 RUN python -m pip install --upgrade pip
 
-# Install PyTorch FIRST (before ComfyUI requirements)
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# Install PyTorch 2.9.1 with CUDA 12.8 FIRST (required for RTX 50xx Blackwell)
+RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 
 # Create workspace
 WORKDIR /workspace
