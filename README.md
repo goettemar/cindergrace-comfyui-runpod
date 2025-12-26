@@ -2,6 +2,18 @@
 
 Optimiertes ComfyUI Docker Image für CINDERGRACE Video-Generierung auf RunPod.
 
+## Prerequisites / Voraussetzungen
+
+Before deploying, create a Network Volume for your models:
+
+1. **RunPod** → **Storage** → **Network Volumes** → **+ New Network Volume**
+2. **Name:** `cindergrace-models` (or any name you prefer)
+3. **Region:** Same region as your GPU pods!
+4. **Size:** 100-150 GB (depending on model set)
+5. Click **Create**
+
+> **Important:** Always use the same Network Volume for Model Manager and ComfyUI!
+
 ## Features
 
 - **CUDA 12.8** - Unterstützt RTX 50xx (Blackwell), 40xx (Ada), A100, H100
