@@ -1,35 +1,100 @@
 # CINDERGRACE ComfyUI RunPod Template
-# Based on ai-dock/comfyui - optimized for cloud deployment
-# Adds CINDERGRACE-specific custom nodes
-FROM ghcr.io/ai-dock/comfyui:v2-cuda-12.1.1-base-22.04-v0.2.7
+# Optimized for Wan 2.2 FP8, Flux, and video generation workflows
+# CUDA 12.8 + PyTorch 2.9.1 for RTX 50xx (Blackwell) support
+FROM nvidia/cuda:12.8.0-cudnn-runtime-ubuntu22.04
+
+# Build args
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Environment
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV COMFY_ROOT=/workspace/ComfyUI
+ENV MODEL_DIR=/workspace/models
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    python3.11 \
+    python3-pip \
+    python3.11-venv \
+    ffmpeg \
+    wget \
+    curl \
+    aria2 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.11 as default
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip
+
+# Install PyTorch 2.9.1 with CUDA 12.8 FIRST (required for RTX 50xx Blackwell)
+RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Create workspace
+WORKDIR /workspace
+
+# Clone ComfyUI and install remaining requirements
+RUN git clone https://github.com/comfyanonymous/ComfyUI.git && \
+    cd ComfyUI && \
+    pip install -r requirements.txt
 
 # ============================================
 # Custom Nodes for CINDERGRACE
 # ============================================
 
-WORKDIR /opt/ComfyUI/custom_nodes
+WORKDIR /workspace/ComfyUI/custom_nodes
 
-# Video/Wan Support (essential for CINDERGRACE)
+# ComfyUI Manager (essential)
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+
+# Video/Wan Support
 RUN git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && \
-    cd ComfyUI-WanVideoWrapper && pip install -r requirements.txt || true
+    cd ComfyUI-WanVideoWrapper && pip install -r requirements.txt
 
 # Florence-2 (Image Analysis)
 RUN git clone https://github.com/kijai/ComfyUI-Florence2.git && \
-    cd ComfyUI-Florence2 && pip install -r requirements.txt || true
+    cd ComfyUI-Florence2 && pip install -r requirements.txt
 
 # GGUF Support (Quantized Models)
-RUN git clone https://github.com/city96/ComfyUI-GGUF.git || true
+RUN git clone https://github.com/city96/ComfyUI-GGUF.git
+
+# Custom Scripts (ShowText etc)
+RUN git clone https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git
 
 # Video Helper Suite
 RUN git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
-    cd ComfyUI-VideoHelperSuite && pip install -r requirements.txt || true
+    cd ComfyUI-VideoHelperSuite && pip install -r requirements.txt
 
 # LTX-Video Support
 RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git && \
     cd ComfyUI-LTXVideo && pip install -r requirements.txt || true
+
+# Impact Pack (useful utilities)
+RUN git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
+    cd ComfyUI-Impact-Pack && pip install -r requirements.txt || true
+
+# ============================================
+# Create model directories
+# ============================================
+
+WORKDIR /workspace/ComfyUI
+
+RUN mkdir -p models/checkpoints \
+    models/clip \
+    models/vae \
+    models/unet \
+    models/diffusion_models \
+    models/loras \
+    models/audio_encoders
 
 # ============================================
 # Startup Scripts
@@ -44,6 +109,10 @@ RUN chmod +x /workspace/start.sh /workspace/link_models.sh
 
 # Expose ComfyUI port
 EXPOSE 8188
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
+    CMD curl -f http://localhost:8188/system_stats || exit 1
 
 # Start command
 CMD ["/workspace/start.sh"]
