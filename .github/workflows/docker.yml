@@ -38,11 +38,15 @@ jobs:
         run: |
           echo "Before cleanup:"
           df -h
-          # Remove unnecessary tools
+          # Aggressive cleanup - free ~30GB
+          sudo rm -rf /opt/hostedtoolcache
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get clean
           sudo docker image prune -af
           echo "After cleanup:"
           df -h
