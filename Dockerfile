@@ -97,15 +97,15 @@ RUN mkdir -p models/checkpoints \
     models/audio_encoders
 
 # ============================================
-# Startup Scripts
+# Startup Scripts (in /opt to survive volume mount)
 # ============================================
 
-WORKDIR /workspace
+# Copy startup scripts to /opt (won't be overwritten by volume)
+COPY start.sh /opt/cindergrace/start.sh
+COPY link_models.sh /opt/cindergrace/link_models.sh
+RUN chmod +x /opt/cindergrace/start.sh /opt/cindergrace/link_models.sh
 
-# Copy startup scripts
-COPY start.sh /workspace/start.sh
-COPY link_models.sh /workspace/link_models.sh
-RUN chmod +x /workspace/start.sh /workspace/link_models.sh
+WORKDIR /workspace
 
 # Expose ComfyUI port
 EXPOSE 8188
@@ -115,4 +115,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
     CMD curl -f http://localhost:8188/system_stats || exit 1
 
 # Start command
-CMD ["/workspace/start.sh"]
+CMD ["/opt/cindergrace/start.sh"]

@@ -15,7 +15,7 @@ if [ -d "/workspace/models" ]; then
     # Link models from Network Volume
     echo ""
     echo "Linking models from Network Volume..."
-    /workspace/link_models.sh
+    /opt/cindergrace/link_models.sh
 else
     echo "[WARN] No models found at /workspace/models"
     echo "       Please attach a Network Volume with your models."
