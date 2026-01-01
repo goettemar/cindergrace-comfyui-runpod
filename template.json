@@ -1,19 +1,23 @@
 {
-  "name": "CINDERGRACE ComfyUI",
-  "description": "ComfyUI optimized for CINDERGRACE video generation. Includes Wan 2.2, Flux, LTX-Video, and Florence-2 support. Pre-configured with all required custom nodes.",
+  "name": "CINDERGRACE ComfyUI + Toolkit",
+  "description": "ComfyUI with Cindergrace Toolkit for video generation. Auto-updates on start. Includes Wan 2.2, Flux, LTX-Video support.",
   "dockerImage": "ghcr.io/goettemar/cindergrace-comfyui-runpod:latest",
   "containerDiskInGb": 30,
   "volumeInGb": 0,
   "volumeMountPath": "/workspace",
-  "ports": "8188/http",
+  "ports": "8188/http,7861/http",
   "env": [
     {
-      "key": "UPDATE_NODES",
+      "key": "SKIP_UPDATE",
+      "value": "false"
+    },
+    {
+      "key": "DISABLE_TOOLKIT",
       "value": "false"
     }
   ],
-  "startCommand": "/workspace/start.sh",
-  "readme": "# CINDERGRACE ComfyUI\n\nPre-configured ComfyUI for CINDERGRACE video generation.\n\n## Quick Start\n\n1. **Attach Network Volume** with your models\n2. **Start the pod**\n3. **Copy the URL** from the logs: `https://<POD_ID>-8188.proxy.runpod.net`\n4. **Paste into CINDERGRACE** → Settings → ComfyUI URL\n\n## Network Volume Structure\n\n```\n/workspace/models/\n├── clip/               # Text encoders (UMT5, T5-XXL, CLIP-L)\n├── vae/                # VAE models (Wan, Flux)\n├── diffusion_models/   # Wan 2.2 models (FP8 recommended)\n├── unet/               # Flux models\n├── loras/              # LoRA adapters\n└── audio_encoders/     # Audio models for S2V\n```\n\n## Recommended Models (FP8 for 24-32GB VRAM)\n\n- Wan 2.2 I2V HighNoise FP8 (14.3 GB)\n- Wan 2.2 I2V LowNoise FP8 (14.3 GB)\n- UMT5-XXL FP8 (6.7 GB)\n- Wan 2.1 VAE (254 MB)\n- Flux Dev FP8 (11.9 GB)\n\n## GPU Recommendations\n\n- **RTX 4090/5090** (24-32GB): Wan FP8 + Flux\n- **A100 40GB+**: Full FP16 models\n\n## More Info\n\nhttps://github.com/goettemar/cindergrace-pipeline-gui\n",
+  "startCommand": "/opt/cindergrace/start.sh",
+  "readme": "# CINDERGRACE ComfyUI + Toolkit\n\nPre-configured ComfyUI with Cindergrace Toolkit for video generation.\nAuto-updates ComfyUI and custom nodes on every start.\n\n## Services\n\n- **ComfyUI**: `https://<POD_ID>-8188.proxy.runpod.net`\n- **Toolkit**: `https://<POD_ID>-7861.proxy.runpod.net`\n\n## Quick Start\n\n1. **Attach Network Volume** with your models at `/workspace`\n2. **Start the pod**\n3. **Open Toolkit** to download/manage models\n4. **Use ComfyUI** for generation\n\n## Environment Variables\n\n- `SKIP_UPDATE=true` - Skip auto-update (faster start)\n- `DISABLE_TOOLKIT=true` - Don't start toolkit\n\n## Network Volume Structure\n\n```\n/workspace/\n├── models/              # Your models (Network Volume)\n│   ├── clip/\n│   ├── vae/\n│   ├── diffusion_models/\n│   ├── loras/\n│   └── ...\n├── ComfyUI/             # Container-managed\n└── cindergrace_toolkit/ # Auto-cloned on start\n```\n\n## GPU Recommendations\n\n- **RTX 4090/5090** (24-32GB): Wan FP8 + Flux\n- **A100 40GB+**: Full FP16 models\n\n## More Info\n\nhttps://github.com/cindergrace/cindergrace_toolkit\n",
   "category": "AI / ML",
   "minVcpu": 4,
   "minMemoryInGb": 32,

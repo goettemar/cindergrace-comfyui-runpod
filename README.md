@@ -1,23 +1,12 @@
-# CINDERGRACE ComfyUI RunPod Template
+# CINDERGRACE ComfyUI + Toolkit RunPod Template
 
-Optimiertes ComfyUI Docker Image für CINDERGRACE Video-Generierung auf RunPod.
-
-## Prerequisites / Voraussetzungen
-
-Before deploying, create a Network Volume for your models:
-
-1. **RunPod** → **Storage** → **Network Volumes** → **+ New Network Volume**
-2. **Name:** `cindergrace-models` (or any name you prefer)
-3. **Region:** Same region as your GPU pods!
-4. **Size:** 100-150 GB (depending on model set)
-5. Click **Create**
-
-> **Important:** Always use the same Network Volume for Model Manager and ComfyUI!
+Optimiertes ComfyUI Docker Image mit integriertem Cindergrace Toolkit fuer RunPod.
 
 ## Features
 
-- **CUDA 12.8** - Unterstützt RTX 50xx (Blackwell), 40xx (Ada), A100, H100
-- **ComfyUI** - Neueste Version mit allen Dependencies
+- **CUDA 12.8** - RTX 50xx (Blackwell), 40xx (Ada), A100, H100
+- **Auto-Update** - ComfyUI und Custom Nodes werden bei jedem Start aktualisiert
+- **Cindergrace Toolkit** - Automatisch installiert, Model-Management im Browser
 - **Custom Nodes** vorinstalliert:
   - ComfyUI-Manager
   - ComfyUI-WanVideoWrapper (Wan 2.2 Video)
@@ -27,8 +16,6 @@ Before deploying, create a Network Volume for your models:
   - ComfyUI-LTXVideo
   - ComfyUI-Impact-Pack
   - ComfyUI-Custom-Scripts
-- **Automatisches Model-Linking** von Network Volume
-- **FP8 optimiert** für 24-32 GB VRAM GPUs
 
 ## Quick Start
 
@@ -39,147 +26,123 @@ Before deploying, create a Network Volume for your models:
 3. Region: Gleiche wie GPU Pod
 4. Size: 100-150 GB
 
-### 2. Modelle herunterladen
-
-Nutze das **CINDERGRACE Model Manager** Template (CPU Pod) um Modelle zu downloaden:
-
-1. Model Manager Template deployen (siehe unten)
-2. Web UI öffnen
-3. Quick Links Tab → URLs kopieren und downloaden
-
-Oder manuell per SSH:
-
-```bash
-mkdir -p /workspace/models/{clip,vae,diffusion_models,unet,loras,audio_encoders}
-apt-get update && apt-get install -y aria2
-
-# Wan 2.2 I2V (Minimal ~36 GB)
-aria2c -x 16 -d /workspace/models/clip -o umt5_xxl_fp8_e4m3fn_scaled.safetensors "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
-
-aria2c -x 16 -d /workspace/models/vae -o wan_2.1_vae.safetensors "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors"
-
-aria2c -x 16 -d /workspace/models/diffusion_models -o wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors"
-
-aria2c -x 16 -d /workspace/models/diffusion_models -o wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors"
-```
-
-### 3. GPU Pod starten
+### 2. Pod starten
 
 1. Pods → + Deploy
-2. Template: **CINDERGRACE ComfyUI** (oder Custom mit diesem Image)
+2. Template: **CINDERGRACE ComfyUI + Toolkit**
 3. GPU: RTX 4090, RTX 5090, oder A100
 4. Network Volume: `cindergrace-models` anhängen
 5. Deploy
 
-### 4. CINDERGRACE verbinden
+### 3. Services nutzen
 
-1. Pod Logs öffnen → URL kopieren: `https://<POD_ID>-8188.proxy.runpod.net`
-2. CINDERGRACE → Settings → ComfyUI URL eintragen
-3. Test Connection → Grün = Ready!
+Nach dem Start sind zwei Services verfügbar:
+
+| Service | URL | Port |
+|---------|-----|------|
+| **ComfyUI** | `https://<POD_ID>-8188.proxy.runpod.net` | 8188 |
+| **Toolkit** | `https://<POD_ID>-7861.proxy.runpod.net` | 7861 |
+
+## Environment Variables
+
+| Variable | Default | Beschreibung |
+|----------|---------|--------------|
+| `SKIP_UPDATE` | `false` | `true` = Kein Auto-Update (schnellerer Start) |
+| `DISABLE_TOOLKIT` | `false` | `true` = Toolkit nicht starten |
 
 ## RunPod Template Einstellungen
 
 | Feld | Wert |
 |------|------|
-| **Template Name** | CINDERGRACE ComfyUI |
+| **Template Name** | CINDERGRACE ComfyUI + Toolkit |
 | **Container Image** | `ghcr.io/goettemar/cindergrace-comfyui-runpod:latest` |
 | **Container Disk** | 30 GB |
 | **Volume Mount Path** | `/workspace` |
-| **HTTP Port** | `8188` |
-
-### Template README (für RunPod):
-```
-CINDERGRACE ComfyUI - Video Generation Backend
-
-Optimized for AI video generation with CINDERGRACE Pipeline GUI.
-
-INCLUDED:
-• CUDA 12.8 + PyTorch 2.9.1 (RTX 50xx/40xx/A100 ready)
-• ComfyUI with Manager
-• Wan 2.2, Flux, LTX-Video, Florence-2, GGUF support
-
-SETUP:
-1. Attach Network Volume with models at /workspace
-2. Deploy GPU pod (RTX 4090/5090 recommended)
-3. Copy proxy URL: https://<POD_ID>-8188.proxy.runpod.net
-4. Paste into CINDERGRACE → Settings → ComfyUI URL
-
-MODELS:
-Use "CINDERGRACE Model Manager" template to download models.
-
-LINKS:
-• GitHub: https://github.com/goettemar/cindergrace-comfyui-runpod
-• Discord: Coming soon
-• Docs: https://github.com/goettemar/cindergrace_gui
-```
+| **HTTP Ports** | `8188, 7861` |
 
 ## Network Volume Struktur
 
 ```
 /workspace/
-├── models/
-│   ├── clip/                    # Text Encoder
-│   │   ├── umt5_xxl_fp8_e4m3fn_scaled.safetensors  (6.7 GB)
-│   │   ├── clip_l.safetensors                       (235 MB)
-│   │   └── t5xxl_fp16.safetensors                   (9.2 GB)
+├── models/                  # Network Volume (persistent)
+│   ├── clip/
 │   ├── vae/
-│   │   ├── wan_2.1_vae.safetensors                  (254 MB)
-│   │   └── ae.safetensors                           (335 MB)
 │   ├── diffusion_models/
-│   │   ├── wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors  (14.3 GB)
-│   │   ├── wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors   (14.3 GB)
-│   │   └── flux1-krea-dev.safetensors                        (~24 GB)
 │   ├── unet/
 │   ├── loras/
+│   ├── checkpoints/
 │   └── audio_encoders/
-├── input/                       # Upload Bilder
-└── output/                      # Generierte Videos (persistent)
+├── input/                   # Upload Bilder (persistent)
+├── output/                  # Generierte Videos (persistent)
+├── ComfyUI/                 # Container (auto-updated)
+└── cindergrace_toolkit/     # Auto-cloned bei Start
 ```
 
-## Model Sets
+## Startup-Ablauf
 
-| Set | Modelle | Größe | Use Case |
-|-----|---------|-------|----------|
-| Minimal | Wan I2V | ~36 GB | Video aus Bildern |
-| Standard | + Flux | ~60 GB | + Keyframe Generation |
-| Full | + S2V | ~76 GB | + Speech to Video |
+```
+[1/4] Updating ComfyUI...
+      git pull + pip install requirements
+
+[2/4] Updating custom nodes...
+      Alle Nodes mit git pull aktualisieren
+
+[3/4] Setting up Cindergrace Toolkit...
+      Clone oder Update von GitHub
+
+[4/4] Linking models...
+      Symlinks von /workspace/models nach ComfyUI
+
+Starting Services:
+  - Toolkit auf Port 7861 (Background)
+  - ComfyUI auf Port 8188 (Foreground)
+```
 
 ## GPU Empfehlungen
 
-| GPU | VRAM | Preis/h | Empfehlung |
-|-----|------|---------|------------|
-| RTX 5090 | 32 GB | ~$0.80 | Beste Wahl für FP8 |
-| RTX 4090 | 24 GB | ~$0.40 | Budget-Option |
-| A100 40GB | 40 GB | ~$1.50 | Datacenter |
-| A100 80GB | 80 GB | ~$2.00 | FP16 Modelle |
+| GPU | VRAM | Use Case |
+|-----|------|----------|
+| RTX 5090 | 32 GB | Beste Wahl fuer FP8 |
+| RTX 4090 | 24 GB | Budget-Option |
+| A100 40GB | 40 GB | Datacenter |
+| A100 80GB | 80 GB | FP16 Modelle |
 
 ## Troubleshooting
 
-### "Connection refused" in CINDERGRACE
-- Warte 1-2 Minuten bis ComfyUI gestartet ist
-- Prüfe Pod Logs auf Fehler
+### Auto-Update deaktivieren
 
-### "Forbidden" (403) Error
-- CINDERGRACE Version aktualisieren (User-Agent Header Fix)
+Fuer schnelleren Start oder bei Update-Problemen:
+
+```
+SKIP_UPDATE=true
+```
+
+### Toolkit deaktivieren
+
+Falls nur ComfyUI benoetigt wird:
+
+```
+DISABLE_TOOLKIT=true
+```
 
 ### "Model not found"
+
 - Network Volume korrekt gemountet? `ls /workspace/models/`
-- Model-Namen prüfen (case-sensitive!)
+- Model-Namen pruefen (case-sensitive!)
+- Toolkit nutzen um Modelle zu downloaden
 
 ### Out of Memory
-- Kleineres Model-Set verwenden
+
+- Kleineres Model-Set verwenden (FP8 statt BF16)
 - Resolution reduzieren
-- Größere GPU wählen
+- Groessere GPU waehlen
 
 ## Links
 
-- [CINDERGRACE GUI](https://github.com/goettemar/cindergrace_gui)
-- [CINDERGRACE Model Manager](https://github.com/goettemar/cindergrace-model-manager)
+- [Cindergrace Toolkit](https://github.com/cindergrace/cindergrace_toolkit)
 - [Docker Image (GHCR)](https://ghcr.io/goettemar/cindergrace-comfyui-runpod)
-- [RunPod Docs](https://docs.runpod.io)
-- [ComfyUI GitHub](https://github.com/comfyanonymous/ComfyUI)
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
 - [Wan 2.2 Models](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged)
-- Discord: Coming soon
 
 ---
 

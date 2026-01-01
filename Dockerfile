@@ -107,8 +107,8 @@ RUN chmod +x /opt/cindergrace/start.sh /opt/cindergrace/link_models.sh
 
 WORKDIR /workspace
 
-# Expose ComfyUI port
-EXPOSE 8188
+# Expose ports (ComfyUI + Toolkit)
+EXPOSE 8188 7861
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
