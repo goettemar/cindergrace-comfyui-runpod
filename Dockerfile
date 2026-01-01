@@ -1,5 +1,5 @@
 # CINDERGRACE ComfyUI RunPod Template
-# Optimized for Wan 2.2 FP8, Flux, and video generation workflows
+# Minimal image - Custom nodes installed dynamically via Toolkit
 # CUDA 12.8 + PyTorch 2.9.1 for RTX 50xx (Blackwell) support
 FROM nvidia/cuda:12.8.0-cudnn-runtime-ubuntu22.04
 
@@ -42,45 +42,20 @@ RUN pip install torch==2.9.1 torchvision torchaudio --index-url https://download
 # Create workspace
 WORKDIR /workspace
 
-# Clone ComfyUI and install remaining requirements
+# Clone ComfyUI and install requirements
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git && \
     cd ComfyUI && \
     pip install -r requirements.txt
 
 # ============================================
-# Custom Nodes for CINDERGRACE
+# Only ComfyUI-Manager pre-installed (required)
+# All other nodes installed dynamically via Toolkit
 # ============================================
 
 WORKDIR /workspace/ComfyUI/custom_nodes
 
-# ComfyUI Manager (essential)
+# ComfyUI Manager (essential - required for node management)
 RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git
-
-# Video/Wan Support
-RUN git clone https://github.com/kijai/ComfyUI-WanVideoWrapper.git && \
-    cd ComfyUI-WanVideoWrapper && pip install -r requirements.txt
-
-# Florence-2 (Image Analysis)
-RUN git clone https://github.com/kijai/ComfyUI-Florence2.git && \
-    cd ComfyUI-Florence2 && pip install -r requirements.txt
-
-# GGUF Support (Quantized Models)
-RUN git clone https://github.com/city96/ComfyUI-GGUF.git
-
-# Custom Scripts (ShowText etc)
-RUN git clone https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git
-
-# Video Helper Suite
-RUN git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
-    cd ComfyUI-VideoHelperSuite && pip install -r requirements.txt
-
-# LTX-Video Support
-RUN git clone https://github.com/Lightricks/ComfyUI-LTXVideo.git && \
-    cd ComfyUI-LTXVideo && pip install -r requirements.txt || true
-
-# Impact Pack (useful utilities)
-RUN git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
-    cd ComfyUI-Impact-Pack && pip install -r requirements.txt || true
 
 # ============================================
 # Create model directories
@@ -90,10 +65,12 @@ WORKDIR /workspace/ComfyUI
 
 RUN mkdir -p models/checkpoints \
     models/clip \
+    models/clip_vision \
     models/vae \
     models/unet \
     models/diffusion_models \
     models/loras \
+    models/text_encoders \
     models/audio_encoders
 
 # ============================================
@@ -111,7 +88,7 @@ WORKDIR /workspace
 EXPOSE 8188 7861
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s \
     CMD curl -f http://localhost:8188/system_stats || exit 1
 
 # Start command
