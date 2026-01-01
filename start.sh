@@ -10,7 +10,7 @@ echo "==========================================="
 echo ""
 
 TOOLKIT_DIR="/workspace/cindergrace_toolkit"
-TOOLKIT_REPO="https://github.com/cindergrace/cindergrace_toolkit.git"
+TOOLKIT_REPO="https://github.com/goettemar/cindergrace_toolkit.git"
 COMFYUI_DIR="/workspace/ComfyUI"
 
 # ============================================
