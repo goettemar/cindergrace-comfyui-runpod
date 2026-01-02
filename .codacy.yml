@@ -1,0 +1,22 @@
+# Codacy Konfiguration
+# Excludes für Complexity-Checks und andere Analysen
+
+exclude_paths:
+  # Tests
+  - "tests/**"
+  - "**/*_test.py"
+  - "**/test_*.py"
+
+  # Python Caches
+  - "**/__pycache__/**"
+  - "**/.pytest_cache/**"
+
+  # Virtual Environments
+  - ".venv/**"
+  - "venv/**"
+  - "env/**"
+
+  # Build/Dist
+  - "build/**"
+  - "dist/**"
+  - "*.egg-info/**"
