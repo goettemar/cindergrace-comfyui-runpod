@@ -1,5 +1,7 @@
 # CINDERGRACE ComfyUI + Toolkit RunPod Template
 
+> Hinweis: Dieses Repository ist ein Hobby-/Experimentierprojekt. Es handelt sich nicht um ein gewerbliches Angebot (keine Auftragsannahme, keine Garantien, kein Supportversprechen).
+
 Minimal ComfyUI Docker Image mit dynamischer Custom Nodes Installation via Cindergrace Toolkit.
 
 ## Features
